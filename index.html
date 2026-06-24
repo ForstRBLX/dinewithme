@@ -788,6 +788,29 @@
                 return;
             }
 
+            // --- ADDED TIME RESTRICTION LOGIC ---
+            if (time && bookingDate) {
+                const [hours, minutes] = time.split(':').map(Number);
+                const timeInMinutes = hours * 60 + minutes;
+                const [y, m, d] = bookingDate.split('-');
+                const dayOfWeek = new Date(y, m - 1, d).getDay(); // 0 is Sunday, 1-6 are Mon-Sat
+
+                if (dayOfWeek >= 1 && dayOfWeek <= 6) { // Monday to Saturday
+                    // Block from 20:00 (1200 mins) to 11:45 (705 mins)
+                    if (timeInMinutes >= 1200 || timeInMinutes < 705) {
+                        showToast("Cannot book between 20:00 and 11:45 on Mon-Sat.");
+                        return;
+                    }
+                } else if (dayOfWeek === 0) { // Sunday
+                    // Block from 19:00 (1140 mins) to 12:00 (720 mins)
+                    if (timeInMinutes >= 1140 || timeInMinutes < 720) {
+                        showToast("Cannot book between 19:00 and 12:00 on Sunday.");
+                        return;
+                    }
+                }
+            }
+            // ------------------------------------
+
             // Save to Customer Database Memory
             saveCustomerToDatabase(name, phone);
 
