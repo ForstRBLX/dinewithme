@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BookWithMe - Staff OS Ultimate</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Ultra-Premium Dark Theme */
+            --bg-color: #070709;
+            --surface-color: rgba(20, 20, 25, 0.75);
+            --surface-solid: #121216;
+            --text-primary: #ffffff;
+            --text-secondary: #9ca3af;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --accent-color: #ffffff;
+            --accent-text: #000000;
+            
+            /* Status Colors */
+            --status-waiting: #6b7280;
+            --status-seated: #3b82f6;
+            --status-starter: #8b5cf6;
+            --status-main: #f59e0b;
+            --status-dessert: #ec4899;
+            --status-cleaning: #ef4444;
+            --status-bill-dropped: #14b8a6;
+            --status-bill-paid: #10b981;
+            
+            --font-family: 'Inter', sans-serif;
+            --ui-speed: 0.15s; 
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at 50% 0%, #161622 0%, #070709 70%);
+            color: var(--text-primary);
+            display: flex; height: 100vh; overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 10px; }
+
+        /* Sidebar */
+        .sidebar {
+            width: 350px; background: var(--surface-color);
+            backdrop-filter: blur(20px); border-right: 1px solid var(--border-color);
+            display: flex; flex-direction: column; z-index: 10;
+        }
+
+        .brand-header {
+            padding: 24px; border-bottom: 1px solid var(--border-color);
+            background: rgba(0,0,0,0.2);
+        }
+        .brand { font-size: 22px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        
+        .date-nav { display: flex; gap: 8px; margin-top: 16px; align-items: center; }
+        .date-picker {
+            background: rgba(0,0,0,0.5); border: 1px solid var(--border-color);
+            color: white; padding: 8px; border-radius: 6px; font-family: inherit;
+            font-size: 13px; outline: none; flex: 1; cursor: pointer;
+        }
+        .btn-today {
+            background: rgba(255,255,255,0.1); border: none; color: white;
+            padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: 600;
+            cursor: pointer; transition: background var(--ui-speed);
+        }
+        .btn-today:hover { background: rgba(255,255,255,0.2); }
+
+        .metrics-summary {
+            display: flex; justify-content: space-between; padding: 16px 24px;
+            background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--border-color);
+            font-size: 13px; font-weight: 600; color: var(--text-secondary);
+        }
+        .metrics-summary span { display: flex; align-items: center; gap: 6px; color: var(--text-primary); }
+
+        /* 3-Way Tabs */
+        .tabs {
+            display: flex; margin: 16px 24px; background: rgba(0,0,0,0.4);
+            border-radius: 8px; padding: 4px; border: 1px solid var(--border-color);
+        }
+        .tab {
+            flex: 1; text-align: center; padding: 8px 0; font-size: 12px; font-weight: 600;
+            cursor: pointer; border-radius: 6px; color: var(--text-secondary); transition: all var(--ui-speed);
+        }
+        .tab.active { background: var(--surface-solid); color: var(--text-primary); box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+
+        .booking-list-container { flex: 1; overflow-y: auto; padding: 0 24px 24px 24px; }
+
+        /* Booking Cards */
+        .booking-card {
+            background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color);
+            border-radius: 8px; padding: 14px; margin-bottom: 10px; cursor: pointer;
+            transition: all var(--ui-speed);
+        }
+        .booking-card:hover { background: rgba(255, 255, 255, 0.08); transform: translateY(-1px); }
+        .booking-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        .booking-name { font-weight: 600; font-size: 14px; }
+        .booking-time { font-size: 12px; color: var(--text-secondary); font-weight: 500; }
+        .badge { padding: 4px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; color: white; text-transform: uppercase; }
+        .booking-notes-preview { font-size: 11px; color: #d4d4d8; font-style: italic; background: rgba(0,0,0,0.3); padding: 6px; border-radius: 4px; margin-top: 8px; border-left: 2px solid var(--text-secondary); }
+
+        /* Main Floor Plan */
+        .main-content { flex: 1; padding: 32px 48px; display: flex; flex-direction: column; overflow-y: auto; }
+        .header-bar { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; }
+        .header-bar h1 { font-size: 26px; font-weight: 600; letter-spacing: -0.5px; margin: 0; }
+
+        /* Blocked Banner */
+        #blocked-banner {
+            background: rgba(239, 68, 68, 0.15); color: #fca5a5; padding: 14px; border-radius: 8px;
+            margin-bottom: 24px; border: 1px solid rgba(239, 68, 68, 0.4); text-align: center;
+            font-weight: 600; font-size: 14px; letter-spacing: 0.5px;
+        }
+
+        /* Perfect 5x5 Grid */
+        .floor-plan {
+            background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border-color);
+            border-radius: 12px; padding: 40px; flex: 1;
+            display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(5, 1fr);
+            gap: 24px; backdrop-filter: blur(10px); max-height: 800px;
+        }
+
+        .table {
+            background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            cursor: pointer; transition: transform var(--ui-speed), background var(--ui-speed); position: relative;
+        }
+        .table:hover { transform: scale(1.04); background: rgba(255, 255, 255, 0.06); }
+        .table.round { border-radius: 50%; } 
+        
+        .table-number { font-size: 18px; font-weight: 700; color: var(--text-secondary); }
+        .table-capacity { font-size: 11px; color: #71717a; margin-top: 4px; text-align: center; }
+
+        .table.occupied { border-color: transparent; color: white; box-shadow: inset 0 0 20px rgba(0,0,0,0.5); }
+        .table.occupied .table-number, .table.occupied .table-capacity { color: #ffffff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); font-weight: 600; }
+        
+        .special-badge {
+            position: absolute; top: -6px; right: -6px; background: var(--accent-color);
+            color: var(--accent-text); font-size: 10px; font-weight: 800; padding: 3px 6px; border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        .special-badge.shared { background: #f59e0b; color: #000; }
+
+        /* Modals */
+        .overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(4px); z-index: 40; display: none; opacity: 0; transition: opacity var(--ui-speed);
+        }
+        .modal {
+            position: fixed; top: 0; right: -480px; width: 440px; height: 100vh;
+            background: var(--surface-solid); z-index: 50; border-left: 1px solid rgba(255,255,255,0.1);
+            transition: right var(--ui-speed); display: flex; flex-direction: column; box-shadow: -20px 0 50px rgba(0,0,0,0.5);
+        }
+        .modal.open { right: 0; }
+        .overlay.open { display: block; opacity: 1; }
+
+        .modal-header { padding: 24px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .modal-body { padding: 24px; flex: 1; overflow-y: auto; }
+        .close-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-primary); }
+
+        /* Forms */
+        .detail-group { margin-bottom: 20px; }
+        .detail-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; margin-bottom: 8px; }
+        .detail-value { font-size: 15px; font-weight: 500; }
+        
+        input, select, textarea {
+            width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid var(--border-color);
+            color: var(--text-primary); border-radius: 6px; font-family: var(--font-family); font-size: 14px; outline: none;
+        }
+        textarea { resize: vertical; min-height: 70px; }
+        input:focus, select:focus, textarea:focus { border-color: rgba(255,255,255,0.4); }
+
+        /* Auto-Complete Search Dropdown Styles */
+        .autocomplete-wrapper { position: relative; width: 100%; }
+        .autocomplete-list {
+            position: absolute; top: 100%; left: 0; right: 0;
+            background: var(--surface-solid); border: 1px solid var(--border-color);
+            border-radius: 6px; margin-top: 4px; z-index: 1000;
+            max-height: 180px; overflow-y: auto; display: none;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+        }
+        .autocomplete-item {
+            padding: 12px 14px; font-size: 13px; cursor: pointer;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.05); transition: background var(--ui-speed);
+        }
+        .autocomplete-item:last-child { border-bottom: none; }
+        .autocomplete-item:hover { background: rgba(255,255,255,0.1); }
+        .ac-name { font-weight: 600; color: white; }
+        .ac-phone { font-size: 12px; color: var(--text-secondary); }
+
+        .btn { padding: 12px; border-radius: 6px; border: none; font-weight: 600; font-size: 14px; cursor: pointer; transition: var(--ui-speed); display: flex; align-items: center; justify-content: center; gap: 8px;}
+        .btn:hover { filter: brightness(1.1); }
+        .btn-primary { background: var(--accent-color); color: var(--accent-text); }
+        .btn-secondary { background: rgba(255,255,255,0.1); color: white; border: 1px solid transparent; }
+        .btn-danger { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+        .btn-sms { background: #162a40; color: #38bdf8; border: 1px solid #0c4a6e; }
+
+        .preset-group { display: flex; gap: 10px; }
+        .preset-btn { flex: 1; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; cursor: pointer; font-size: 13px; transition: all var(--ui-speed); }
+        .preset-btn.active { background: var(--text-primary); color: #000; }
+
+        .linked-table-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 10px 12px; border-radius: 6px; margin-bottom: 8px; font-size: 13px; }
+        .btn-unlink { background: transparent; border: 1px solid #ef4444; color: #ef4444; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; }
+
+        /* Chat UI */
+        .chat-box { background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; }
+        .chat-history { max-height: 200px; overflow-y: auto; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px; }
+        .chat-msg { padding: 8px 12px; border-radius: 8px; font-size: 13px; max-width: 85%; }
+        .chat-msg.staff { background: var(--status-seated); color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
+        .chat-msg.guest { background: rgba(255,255,255,0.15); color: white; align-self: flex-start; border-bottom-left-radius: 2px; }
+        .chat-time { font-size: 9px; opacity: 0.7; margin-top: 4px; text-align: right; }
+
+        /* Quick Book */
+        .quick-book-widget { position: fixed; bottom: 32px; right: 32px; z-index: 30; }
+        .quick-book-btn {
+            background: var(--accent-color); color: var(--accent-text); border: none; padding: 14px 24px;
+            border-radius: 30px; font-size: 14px; font-weight: 700; cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8); transition: transform var(--ui-speed);
+        }
+        .quick-book-btn:hover { transform: scale(1.05); }
+
+        .toast {
+            position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(100px);
+            background: var(--accent-color); color: var(--accent-text); padding: 12px 24px;
+            border-radius: 30px; font-size: 14px; font-weight: 600; transition: transform 0.3s; z-index: 100;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        .legend { display: flex; gap: 16px; flex-wrap: wrap; }
+        .legend-item { display: flex; align-items: center; font-size: 12px; color: var(--text-secondary); font-weight: 500; }
+        .legend-color { width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="brand-header">
+            <div class="brand">BookWithMe</div>
+            <div class="date-nav">
+                <input type="date" class="date-picker" id="global-date" onchange="handleDateChange()">
+                <button class="btn-today" onclick="goToToday()">Today</button>
+            </div>
+        </div>
+        <div class="metrics-summary">
+            <span>👥 <b id="metric-people">0</b></span>
+            <span>🍽️ <b id="metric-tables">0</b></span>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" id="tab-active" onclick="switchTab('active')">Waitlist</div>
+            <div class="tab" id="tab-seated" onclick="switchTab('seated')">Seated</div>
+            <div class="tab" id="tab-history" onclick="switchTab('history')">History</div>
+        </div>
+        <div class="booking-list-container" id="sidebar-list"></div>
+    </div>
+
+    <!-- Main Floor Plan -->
+    <div class="main-content">
+        <div class="header-bar">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <h1>Floor Plan</h1>
+                <button id="btn-block-date" class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="toggleBlockDate()">Block Date</button>
+            </div>
+            <div class="legend" id="status-legend"></div>
+        </div>
+        
+        <div id="blocked-banner" style="display: none;">
+            🚨 This date is actively Blocked. New reservations and walk-ins cannot be added.
+        </div>
+
+        <div class="floor-plan" id="floor-plan"></div>
+    </div>
+
+    <!-- Quick Book -->
+    <div class="quick-book-widget">
+        <button class="quick-book-btn" onclick="openNewBooking()">+ New Booking</button>
+    </div>
+
+    <div class="overlay" id="overlay" onclick="closeModal()"></div>
+
+    <!-- Occupied / Booked Guest Modal -->
+    <div class="modal" id="modal-booked">
+        <div class="modal-header">
+            <h2 id="modal-title">Guest Profile</h2>
+            <button class="close-btn" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="detail-group">
+                <div class="detail-label">Guest Info</div>
+                <div class="detail-value" id="modal-name">Name</div>
+                <div class="detail-value" style="color: var(--text-secondary); font-size: 13px;" id="modal-phone">Phone</div>
+                <div class="detail-value" style="color: var(--text-secondary); font-size: 13px; margin-top: 4px;" id="modal-size">0 Guests</div>
+                <div id="modal-notes" class="booking-notes-preview" style="display: none;"></div>
+            </div>
+
+            <!-- Waitlist Assign -->
+            <div id="waitlist-controls" style="display: none;">
+                <!-- Standard Seating UI -->
+                <div class="detail-group" id="normal-seating-ui">
+                    <div class="detail-label">Assign Table (Select Occupied to Override/Share)</div>
+                    <select id="initial-table-select"></select>
+                    <button class="btn btn-primary" style="margin-top: 8px; width: 100%;" onclick="seatGuest()">Seat Guest</button>
+                </div>
+                <!-- Wrong Date Warning UI -->
+                <div class="detail-group" id="wrong-date-ui" style="display: none; background: rgba(239, 68, 68, 0.1); padding: 16px; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.3);">
+                    <div class="detail-label" style="color: #fca5a5;">Date Mismatch Security</div>
+                    <div style="font-size: 13px; color: #f87171; margin-bottom: 12px; line-height: 1.4;">This booking is not scheduled for today. You cannot seat a guest unless their reservation date is today.</div>
+                    <button class="btn btn-secondary" style="width: 100%; border: 1px solid #f87171; color: #f87171; background: transparent;" onclick="moveBookingToToday()">Move Booking to Today</button>
+                </div>
+            </div>
+
+            <!-- Seated Controls -->
+            <div id="seated-controls" style="display: none;">
+                <div class="detail-group">
+                    <div class="detail-label">Status (Applies to all linked tables)</div>
+                    <select id="status-select" onchange="updateStatus()">
+                        <option value="Seated">Seated</option>
+                        <option value="Starter">Starter</option>
+                        <option value="Main">Main</option>
+                        <option value="Desert">Desert</option>
+                        <option value="Clearning Needed">Cleaning Needed</option>
+                        <option value="Bill Dropped">Bill Dropped</option>
+                        <option value="Bill Paid">Bill Paid</option>
+                        <option value="Table Cleared" style="color: #ef4444; font-weight: bold;">Table Cleared (Frees Table)</option>
+                    </select>
+                </div>
+
+                <div class="detail-group">
+                    <div class="detail-label">Relocate / Move Table</div>
+                    <div style="display:flex; gap: 8px;">
+                        <select id="move-table-select" style="flex:1;"></select>
+                        <button class="btn btn-secondary" onclick="moveGuest()">Move</button>
+                    </div>
+                </div>
+
+                <div class="detail-group">
+                    <div class="detail-label">Join / Link Tables</div>
+                    <div id="linked-tables-list"></div>
+                    <div style="display:flex; gap: 8px; margin-top: 8px;">
+                        <select id="link-table-select" style="flex:1;"></select>
+                        <button class="btn btn-secondary" onclick="linkNewTable()">Link</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enhanced Chat System -->
+            <div id="sms-section" class="detail-group" style="margin-top: 32px;">
+                <div class="detail-label">Live Messaging Chat</div>
+                <div class="chat-box">
+                    <div id="chat-history" class="chat-history"></div>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="sms-text" placeholder="Type a message..." style="flex: 1;" onkeypress="handleChatEnter(event)">
+                        <button class="btn btn-sms" style="padding: 0 16px;" onclick="sendSMS()">Send</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="history-controls" style="display: none;">
+                <button class="btn btn-primary" style="width: 100%;" onclick="restoreGuest()">Restore to Waitlist</button>
+            </div>
+
+            <div class="detail-group" id="danger-zone" style="margin-top: 32px; border-top: 1px solid var(--border-color); padding-top: 16px;">
+                <button class="btn btn-danger" style="width: 100%;" onclick="removeBooking()">Delete Booking</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty Table / Walk-In Modal -->
+    <div class="modal" id="modal-empty">
+        <div class="modal-header">
+            <h2 id="empty-title">Table Status</h2>
+            <button class="close-btn" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div style="text-align: center; margin-bottom: 24px;">
+                <div style="font-size: 48px; margin-bottom: 8px;">🍽️</div>
+                <div style="font-size: 18px; font-weight: 600;">Table Available</div>
+                <div id="empty-cap" style="color: var(--text-secondary); font-size: 14px;">Capacity: X</div>
+            </div>
+            
+            <div class="detail-group">
+                <div class="detail-label">Walk-In Party Size</div>
+                <select id="walkin-size" onchange="handlePinOverride('walkin-size', 'walkin-custom-size')">
+                    <option value="1">1 Person</option>
+                    <option value="2" selected>2 People</option>
+                    <option value="3">3 People</option>
+                    <option value="4">4 People</option>
+                    <option value="5">5 People</option>
+                    <option value="override">6+ (Override PIN Required)</option>
+                </select>
+                <input type="number" id="walkin-custom-size" placeholder="Manual party size" style="display:none; margin-top: 8px;" min="6">
+            </div>
+
+            <button class="btn btn-primary" style="width: 100%; padding: 16px; font-size: 16px;" onclick="seatWalkIn()">Seat Walk-In Here</button>
+        </div>
+    </div>
+
+    <!-- New Booking Modal -->
+    <div class="modal" id="new-booking-modal">
+        <div class="modal-header">
+            <h2>Add Reservation</h2>
+            <button class="close-btn" onclick="closeNewBooking()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <!-- Enhanced Name Input with Auto-Complete -->
+            <div class="detail-group">
+                <div class="detail-label">Guest Name</div>
+                <div class="autocomplete-wrapper">
+                    <input type="text" id="new-name" autocomplete="off" oninput="showSuggestions(this.value, 'name')" required>
+                    <div id="name-suggestions" class="autocomplete-list"></div>
+                </div>
+            </div>
+
+            <!-- Enhanced Phone Input with Auto-Complete -->
+            <div class="detail-group">
+                <div class="detail-label">Phone Number</div>
+                <div class="autocomplete-wrapper">
+                    <input type="tel" id="new-phone" autocomplete="off" oninput="showSuggestions(this.value, 'phone')" required>
+                    <div id="phone-suggestions" class="autocomplete-list"></div>
+                </div>
+            </div>
+
+            <div class="detail-group">
+                <div class="detail-label">Party Size</div>
+                <select id="new-size" onchange="handlePinOverride('new-size', 'new-custom-size')">
+                    <option value="1">1 Person</option>
+                    <option value="2" selected>2 People</option>
+                    <option value="3">3 People</option>
+                    <option value="4">4 People</option>
+                    <option value="5">5 People</option>
+                    <option value="override">6+ (PIN)</option>
+                </select>
+                <input type="number" id="new-custom-size" placeholder="Enter custom size" style="display:none; margin-top: 8px;" min="6">
+            </div>
+            
+            <div style="display: flex; gap: 16px;">
+                <div class="detail-group" style="flex: 1;">
+                    <div class="detail-label">Date</div>
+                    <input type="date" id="new-date" required>
+                </div>
+                <div class="detail-group" style="flex: 1;">
+                    <div class="detail-label">Time</div>
+                    <input type="time" id="new-time" value="19:00" required>
+                </div>
+            </div>
+
+            <div class="detail-group">
+                <div class="detail-label">Special Occasion</div>
+                <div class="preset-group">
+                    <button class="preset-btn" id="btn-birthday" onclick="toggleOccasion('Birthday')">🎂 Birthday</button>
+                    <button class="preset-btn" id="btn-anniv" onclick="toggleOccasion('Anniversary')">🥂 Anniversary</button>
+                </div>
+            </div>
+            <div class="detail-group">
+                <div class="detail-label">Booking Notes / Requests</div>
+                <textarea id="new-notes" placeholder="Dietary requirements, highchair needed..."></textarea>
+            </div>
+            <button class="btn btn-primary" style="width: 100%; margin-top: 16px;" onclick="submitNewBooking()">Confirm Booking</button>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        let bookings = [];
+        let bookingIdCounter = 1;
+        let walkInCounter = 1;
+        
+        // System variables
+        const realTodayDate = new Date().toISOString().split('T')[0];
+        let currentDate = realTodayDate; 
+        let blockedDates = []; 
+        
+        // CUSTOMER DATABASE (Local Memory)
+        let customerDatabase = JSON.parse(localStorage.getItem('bwm_customers')) || [];
+
+        let activeTab = 'active'; 
+        let currentActiveBookingId = null;
+        let currentEmptyTableId = null;
+        let selectedOccasion = null;
+
+        const statusColors = {
+            "Waiting": "var(--status-waiting)", "Seated": "var(--status-seated)",
+            "Starter": "var(--status-starter)", "Main": "var(--status-main)",
+            "Desert": "var(--status-dessert)", "Clearning Needed": "var(--status-cleaning)",
+            "Bill Dropped": "var(--status-bill-dropped)", "Bill Paid": "var(--status-bill-paid)"
+        };
+
+        const tables = [
+            { id: 1, cap: 2, class: 'round' }, { id: 2, cap: 2, class: 'round' }, { id: 3, cap: 2, class: 'round' }, { id: 4, cap: 2, class: 'round' }, { id: 5, cap: 2, class: 'round' },
+            { id: 6, cap: 4, class: '' }, { id: 7, cap: 4, class: '' }, { id: 8, cap: 4, class: '' }, { id: 9, cap: 4, class: '' }, { id: 10, cap: 4, class: '' },
+            { id: 11, cap: 4, class: '' }, { id: 12, cap: 4, class: '' }, { id: 13, cap: 4, class: '' }, { id: 14, cap: 4, class: '' }, { id: 15, cap: 4, class: '' },
+            { id: 16, cap: 4, class: '' }, { id: 17, cap: 4, class: '' }, { id: 18, cap: 4, class: '' }, { id: 19, cap: 4, class: '' }, { id: 20, cap: 4, class: '' },
+            { id: 21, cap: 2, class: 'round' }, { id: 22, cap: 2, class: 'round' }, { id: 23, cap: 2, class: 'round' }, { id: 24, cap: 2, class: 'round' }, { id: 25, cap: 2, class: 'round' }
+        ];
+
+        // Close Auto-Complete Modals when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.autocomplete-wrapper')) {
+                document.getElementById('name-suggestions').style.display = 'none';
+                document.getElementById('phone-suggestions').style.display = 'none';
+            }
+        });
+
+        function init() { document.getElementById('global-date').value = currentDate; renderLegend(); refreshUI(); }
+
+        function renderLegend() {
+            let html = '';
+            for (const [status, color] of Object.entries(statusColors)) {
+                if(status !== 'Waiting') html += `<div class="legend-item"><div class="legend-color" style="background: ${color};"></div>${status}</div>`;
+            }
+            document.getElementById('status-legend').innerHTML = html;
+        }
+
+        function toggleBlockDate() {
+            if (blockedDates.includes(currentDate)) {
+                blockedDates = blockedDates.filter(d => d !== currentDate);
+                showToast(`Date unblocked.`);
+            } else {
+                blockedDates.push(currentDate);
+                showToast(`Date blocked successfully.`);
+            }
+            refreshUI();
+        }
+
+        function refreshUI() { 
+            const banner = document.getElementById('blocked-banner');
+            const blockBtn = document.getElementById('btn-block-date');
+            
+            if (blockedDates.includes(currentDate)) {
+                banner.style.display = 'block';
+                blockBtn.innerText = "Unblock Date";
+                blockBtn.style.borderColor = "#ef4444";
+                blockBtn.style.color = "#ef4444";
+            } else {
+                banner.style.display = 'none';
+                blockBtn.innerText = "Block Date";
+                blockBtn.style.borderColor = "var(--border-color)";
+                blockBtn.style.color = "white";
+            }
+
+            renderTables(); renderSidebar(); updateMetrics(); 
+        }
+
+        function updateMetrics() {
+            let activePeople = 0; let occupiedTables = 0;
+            bookings.filter(b => b.date === currentDate && b.status !== "Cleared").forEach(b => {
+                activePeople += b.size; occupiedTables += b.tableIds.length;
+            });
+            document.getElementById('metric-people').innerText = `${activePeople} People`;
+            document.getElementById('metric-tables').innerText = `${occupiedTables} Tables`;
+        }
+
+        function getOccasionSymbol(occasion) {
+            if (occasion === 'Birthday') return '🎂';
+            if (occasion === 'Anniversary') return '🥂';
+            return '';
+        }
+
+        function renderTables() {
+            const floorPlan = document.getElementById('floor-plan');
+            floorPlan.innerHTML = '';
+            const todaysBookings = bookings.filter(b => b.date === currentDate && b.status !== "Cleared");
+
+            tables.forEach(table => {
+                const occupyingBookings = todaysBookings.filter(b => b.tableIds.includes(table.id));
+                const tableEl = document.createElement('div');
+                tableEl.className = `table ${table.class}`;
+                
+                if (occupyingBookings.length > 0) {
+                    const primary = occupyingBookings[0];
+                    tableEl.classList.add('occupied');
+                    tableEl.style.backgroundColor = statusColors[primary.status];
+                    
+                    let badges = '';
+                    if (occupyingBookings.length > 1) {
+                        badges = `<div class="special-badge shared">+${occupyingBookings.length - 1} Shared</div>`;
+                    } else if (primary.tableIds.length > 1) {
+                        badges = `<div class="special-badge">🔗 Linked</div>`;
+                    }
+                    
+                    const symbol = getOccasionSymbol(primary.occasion);
+                    tableEl.innerHTML = `
+                        ${badges}
+                        <div class="table-number">T${table.id}</div>
+                        <div class="table-capacity" style="color:white;">${symbol} ${primary.name.substring(0,8)}</div>
+                    `;
+                    tableEl.onclick = () => openBookingModal(primary.id);
+                } else {
+                    tableEl.innerHTML = `<div class="table-number">${table.id}</div><div class="table-capacity">${table.cap} Seats</div>`;
+                    tableEl.onclick = () => openEmptyModal(table.id);
+                }
+                floorPlan.appendChild(tableEl);
+            });
+        }
+
+        function renderSidebar() {
+            const container = document.getElementById('sidebar-list');
+            container.innerHTML = '';
+            
+            let displayBookings = [];
+            let emptyMessage = "";
+
+            if (activeTab === 'active') {
+                displayBookings = bookings.filter(b => b.date === currentDate && b.status === "Waiting");
+                emptyMessage = "No waiting guests for this date.";
+            } else if (activeTab === 'seated') {
+                displayBookings = bookings.filter(b => b.date === currentDate && !["Waiting", "Cleared"].includes(b.status));
+                emptyMessage = "No seated guests for this date.";
+            } else if (activeTab === 'history') {
+                displayBookings = bookings.filter(b => b.date === currentDate && b.status === "Cleared");
+                emptyMessage = "No cleared guests for this date.";
+            }
+
+            if (displayBookings.length === 0) {
+                container.innerHTML = `<div style="text-align: center; color: var(--text-secondary); margin-top: 20px; font-size: 13px;">${emptyMessage}</div>`;
+                return;
+            }
+
+            displayBookings.forEach(booking => {
+                const card = document.createElement('div');
+                card.className = 'booking-card';
+                card.onclick = () => openBookingModal(booking.id);
+                
+                let badgeColor = statusColors[booking.status] || '#6b7280';
+                if(booking.status === "Cleared") badgeColor = '#ef4444'; 
+                
+                const symbol = getOccasionSymbol(booking.occasion);
+                let notesHtml = booking.notes ? `<div class="booking-notes-preview">"${booking.notes}"</div>` : '';
+                let tableInfo = booking.tableIds.length > 0 ? `<span style="font-weight:700; color:#fff;">T${booking.tableIds.join(', ')}</span>` : '';
+                let chatIcon = booking.messages && booking.messages.length > 0 ? `<span style="font-size:12px;" title="Ongoing Chat">💬 ${booking.messages.length}</span>` : '';
+
+                card.innerHTML = `
+                    <div class="booking-header">
+                        <div class="booking-name">${symbol} ${booking.name}</div>
+                        <div class="booking-time">${booking.time}</div>
+                    </div>
+                    <div style="display:flex; align-items:center; width:100%; margin-top:6px;">
+                        <div style="display:flex; gap: 8px; align-items:center;">
+                            <span class="badge" style="background: ${badgeColor}">${booking.status}</span>
+                            <span style="font-size:12px; color:var(--text-secondary);">👥 ${booking.size}</span>
+                        </div>
+                        <div style="margin-left:auto; display:flex; gap:8px; align-items:center; font-size:12px; font-weight:700; color:#fff;">
+                            ${chatIcon}
+                            ${tableInfo}
+                        </div>
+                    </div>
+                    ${notesHtml}
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function handleDateChange() { currentDate = document.getElementById('global-date').value; refreshUI(); }
+        function goToToday() { currentDate = realTodayDate; document.getElementById('global-date').value = currentDate; refreshUI(); }
+        
+        function switchTab(tab) {
+            activeTab = tab;
+            document.getElementById('tab-active').classList.toggle('active', tab === 'active');
+            document.getElementById('tab-seated').classList.toggle('active', tab === 'seated');
+            document.getElementById('tab-history').classList.toggle('active', tab === 'history');
+            renderSidebar();
+        }
+
+        function toggleOccasion(type) {
+            const btnBday = document.getElementById('btn-birthday');
+            const btnAnniv = document.getElementById('btn-anniv');
+            if (selectedOccasion === type) {
+                selectedOccasion = null; btnBday.classList.remove('active'); btnAnniv.classList.remove('active');
+            } else {
+                selectedOccasion = type;
+                btnBday.classList.toggle('active', type === 'Birthday');
+                btnAnniv.classList.toggle('active', type === 'Anniversary');
+            }
+        }
+
+        // --- CUSTOMER AUTOCOMPLETE LOGIC ---
+        function showSuggestions(query, type) {
+            const nameList = document.getElementById('name-suggestions');
+            const phoneList = document.getElementById('phone-suggestions');
+            
+            nameList.style.display = 'none';
+            phoneList.style.display = 'none';
+            
+            if (!query || query.length < 1) return;
+            
+            const q = query.toLowerCase();
+            let matches = [];
+            
+            if (type === 'name') {
+                matches = customerDatabase.filter(c => c.name.toLowerCase().includes(q));
+            } else {
+                matches = customerDatabase.filter(c => c.phone.includes(q));
+            }
+            
+            if (matches.length === 0) return;
+            
+            const listEl = type === 'name' ? nameList : phoneList;
+            listEl.innerHTML = '';
+            
+            matches.forEach(c => {
+                const item = document.createElement('div');
+                item.className = 'autocomplete-item';
+                item.innerHTML = `<span class="ac-name">${c.name}</span><span class="ac-phone">${c.phone}</span>`;
+                item.onclick = () => selectSavedCustomer(c.name, c.phone);
+                listEl.appendChild(item);
+            });
+            
+            listEl.style.display = 'block';
+        }
+
+        function selectSavedCustomer(name, phone) {
+            document.getElementById('new-name').value = name;
+            document.getElementById('new-phone').value = phone;
+            document.getElementById('name-suggestions').style.display = 'none';
+            document.getElementById('phone-suggestions').style.display = 'none';
+            showToast("Customer profile loaded.");
+        }
+
+        function saveCustomerToDatabase(name, phone) {
+            if (!name || !phone || phone === "N/A") return;
+            // Check if user already exists
+            const existing = customerDatabase.find(c => c.phone === phone);
+            if (!existing) {
+                customerDatabase.push({ name: name, phone: phone });
+                localStorage.setItem('bwm_customers', JSON.stringify(customerDatabase));
+            } else if (existing.name !== name) {
+                // If phone matches but name updated, overwrite name
+                existing.name = name;
+                localStorage.setItem('bwm_customers', JSON.stringify(customerDatabase));
+            }
+        }
+
+        function openNewBooking() {
+            document.getElementById('overlay').classList.add('open'); document.getElementById('new-booking-modal').classList.add('open');
+            document.getElementById('new-name').value = ''; document.getElementById('new-phone').value = '';
+            document.getElementById('new-size').value = '2'; document.getElementById('new-custom-size').style.display = 'none';
+            document.getElementById('new-date').value = currentDate; 
+            document.getElementById('new-notes').value = ''; selectedOccasion = null;
+            document.getElementById('btn-birthday').classList.remove('active'); document.getElementById('btn-anniv').classList.remove('active');
+            
+            // Hide autocompletes if they were left open
+            document.getElementById('name-suggestions').style.display = 'none';
+            document.getElementById('phone-suggestions').style.display = 'none';
+        }
+        
+        function closeNewBooking() { document.getElementById('new-booking-modal').classList.remove('open'); document.getElementById('overlay').classList.remove('open'); }
+        function closeModal() {
+            document.getElementById('overlay').classList.remove('open'); document.getElementById('modal-booked').classList.remove('open');
+            document.getElementById('modal-empty').classList.remove('open'); currentActiveBookingId = null; currentEmptyTableId = null;
+        }
+
+        function handlePinOverride(selectId, inputId) {
+            const select = document.getElementById(selectId);
+            const customInput = document.getElementById(inputId);
+            if (select.value === 'override') {
+                if (prompt("Admin Override PIN (Enter 846627):") === "846627") {
+                    customInput.style.display = 'block'; customInput.value = 6;
+                } else {
+                    alert("Incorrect PIN."); select.value = '5'; customInput.style.display = 'none';
+                }
+            } else { customInput.style.display = 'none'; }
+        }
+
+        function getCalculatedSize(selectId, inputId) {
+            const selectVal = document.getElementById(selectId).value;
+            return selectVal === 'override' ? parseInt(document.getElementById(inputId).value) : parseInt(selectVal);
+        }
+
+        function submitNewBooking() {
+            const name = document.getElementById('new-name').value;
+            const phone = document.getElementById('new-phone').value;
+            const time = document.getElementById('new-time').value;
+            const bookingDate = document.getElementById('new-date').value;
+            const notes = document.getElementById('new-notes').value;
+            const finalSize = getCalculatedSize('new-size', 'new-custom-size');
+
+            if(!name) { showToast("Name is required."); return; }
+
+            if (blockedDates.includes(bookingDate)) {
+                showToast("Cannot create reservation: This date is blocked.");
+                return;
+            }
+
+            // Save to Customer Database Memory
+            saveCustomerToDatabase(name, phone);
+
+            bookings.push({
+                id: bookingIdCounter++, name: name, phone: phone, size: finalSize, time: time,
+                notes: notes, occasion: selectedOccasion, status: "Waiting", tableIds: [], date: bookingDate, messages: []
+            });
+            
+            showToast(`${name} booked for ${bookingDate}.`);
+            closeNewBooking();
+            
+            if (bookingDate === currentDate) {
+                if(activeTab !== 'active') switchTab('active'); else refreshUI();
+            } else {
+                refreshUI();
+            }
+        }
+
+        function openEmptyModal(tableId) {
+            currentEmptyTableId = tableId;
+            const table = tables.find(t => t.id === tableId);
+            document.getElementById('empty-title').innerText = `Table ${tableId}`;
+            document.getElementById('empty-cap').innerText = `Capacity: ${table.cap} Seats`;
+            document.getElementById('walkin-size').value = table.cap > 5 ? '5' : table.cap;
+            document.getElementById('walkin-custom-size').style.display = 'none';
+            document.getElementById('overlay').classList.add('open');
+            document.getElementById('modal-empty').classList.add('open');
+        }
+
+        function seatWalkIn() {
+            if (blockedDates.includes(currentDate)) {
+                showToast("Cannot seat walk-in: This date is blocked.");
+                closeModal();
+                return;
+            }
+
+            const table = tables.find(t => t.id === currentEmptyTableId);
+            const now = new Date();
+            const timeString = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+            const walkInName = `Walk in ${walkInCounter++}`;
+            const finalSize = getCalculatedSize('walkin-size', 'walkin-custom-size');
+            
+            bookings.push({
+                id: bookingIdCounter++, name: walkInName, phone: "N/A", size: finalSize, time: timeString,
+                notes: "", occasion: null, status: "Seated", tableIds: [table.id], date: currentDate, messages: []
+            });
+            
+            showToast(`${walkInName} (${finalSize}ppl) seated at Table ${table.id}`);
+            closeModal(); refreshUI();
+        }
+
+        function openBookingModal(bookingId) {
+            currentActiveBookingId = bookingId;
+            const booking = bookings.find(b => b.id === bookingId);
+            const symbol = getOccasionSymbol(booking.occasion);
+            
+            document.getElementById('modal-name').innerText = `${symbol} ${booking.name}`;
+            document.getElementById('modal-phone').innerText = booking.phone || "No phone";
+            document.getElementById('modal-size').innerText = `Date: ${booking.date} | ${booking.size} Guests @ ${booking.time}`;
+            
+            const notesEl = document.getElementById('modal-notes');
+            if (booking.notes) { notesEl.style.display = 'block'; notesEl.innerText = `Notes: ${booking.notes}`; } else { notesEl.style.display = 'none'; }
+            
+            const waitlistControls = document.getElementById('waitlist-controls');
+            const normalSeatingUi = document.getElementById('normal-seating-ui');
+            const wrongDateUi = document.getElementById('wrong-date-ui');
+            const seatedControls = document.getElementById('seated-controls');
+            const historyControls = document.getElementById('history-controls');
+            const smsSection = document.getElementById('sms-section');
+            const dangerZone = document.getElementById('danger-zone');
+
+            waitlistControls.style.display = 'none'; seatedControls.style.display = 'none';
+            historyControls.style.display = 'none'; smsSection.style.display = 'block'; dangerZone.style.display = 'block';
+
+            if (booking.status === "Cleared") {
+                historyControls.style.display = 'block'; smsSection.style.display = 'none'; dangerZone.style.display = 'none';
+            } else if (booking.tableIds.length === 0) {
+                waitlistControls.style.display = 'block'; 
+                
+                if (booking.date !== realTodayDate) {
+                    normalSeatingUi.style.display = 'none';
+                    wrongDateUi.style.display = 'block';
+                } else {
+                    normalSeatingUi.style.display = 'block';
+                    wrongDateUi.style.display = 'none';
+                    populateAllTables('initial-table-select');
+                }
+            } else {
+                seatedControls.style.display = 'block';
+                document.getElementById('status-select').value = booking.status;
+                renderLinkedTablesList(booking);
+                populateAllTables('move-table-select', booking.tableIds);
+                populateAllTables('link-table-select', booking.tableIds); 
+            }
+
+            document.getElementById('sms-text').value = '';
+            renderChatHistory(booking);
+
+            document.getElementById('overlay').classList.add('open');
+            document.getElementById('modal-booked').classList.add('open');
+        }
+
+        // --- LIVE CHAT SYSTEM ---
+        function renderChatHistory(booking) {
+            const historyEl = document.getElementById('chat-history');
+            historyEl.innerHTML = '';
+            if (!booking.messages || booking.messages.length === 0) {
+                historyEl.innerHTML = '<div style="color:var(--text-secondary); text-align:center; font-size:11px; padding:10px;">No messages yet. Say hello!</div>';
+                return;
+            }
+            booking.messages.forEach(msg => {
+                const div = document.createElement('div');
+                div.className = `chat-msg ${msg.sender}`;
+                div.innerHTML = `<div>${msg.text}</div><div class="chat-time">${msg.time}</div>`;
+                historyEl.appendChild(div);
+            });
+            historyEl.scrollTop = historyEl.scrollHeight;
+        }
+
+        function handleChatEnter(e) {
+            if (e.key === 'Enter') sendSMS();
+        }
+
+        function sendSMS() {
+            const textEl = document.getElementById('sms-text');
+            const text = textEl.value;
+            if (!text.trim()) return;
+            
+            const booking = bookings.find(b => b.id === currentActiveBookingId);
+            const now = new Date();
+            const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+            
+            if(!booking.messages) booking.messages = [];
+            
+            booking.messages.push({ sender: 'staff', text: text, time: timeStr });
+            textEl.value = '';
+            renderChatHistory(booking);
+            renderSidebar(); 
+            
+            if (booking.phone !== "N/A" && Math.random() > 0.5) {
+                setTimeout(() => {
+                    const activeBooking = bookings.find(x => x.id === booking.id);
+                    if(activeBooking) {
+                        const replyTime = new Date();
+                        const rTimeStr = replyTime.getHours().toString().padStart(2, '0') + ':' + replyTime.getMinutes().toString().padStart(2, '0');
+                        activeBooking.messages.push({ sender: 'guest', text: 'Thank you for the update! We are looking forward to it.', time: rTimeStr });
+                        
+                        if(currentActiveBookingId === activeBooking.id) renderChatHistory(activeBooking);
+                        renderSidebar();
+                        showToast(`New message from ${activeBooking.name}`);
+                    }
+                }, 3000);
+            }
+        }
+
+        function moveBookingToToday() {
+            if (blockedDates.includes(realTodayDate)) {
+                showToast("Cannot move booking: Today's date is blocked.");
+                return;
+            }
+
+            const booking = bookings.find(b => b.id === currentActiveBookingId);
+            booking.date = realTodayDate;
+            
+            currentDate = realTodayDate;
+            document.getElementById('global-date').value = realTodayDate;
+            
+            showToast(`${booking.name}'s booking moved to Today.`);
+            refreshUI();
+            openBookingModal(booking.id);
+        }
+
+        function populateAllTables(elementId, excludeIds = []) {
+            const select = document.getElementById(elementId);
+            select.innerHTML = '<option value="" disabled selected>Select table...</option>';
+            const todaysBookings = bookings.filter(b => b.date === currentDate && b.status !== "Cleared");
+            
+            tables.forEach(t => {
+                if (excludeIds.includes(t.id)) return;
+                
+                const occupants = todaysBookings.filter(b => b.tableIds.includes(t.id));
+                let label = `Table ${t.id} (${t.cap} Seats)`;
+                if (occupants.length > 0) label += ` [Occupied - Share/Override]`;
+                
+                select.innerHTML += `<option value="${t.id}">${label}</option>`;
+            });
+        }
+
+        function seatGuest() {
+            const tableId = document.getElementById('initial-table-select').value;
+            if (!tableId) return;
+            const booking = bookings.find(b => b.id === currentActiveBookingId);
+            booking.tableIds = [parseInt(tableId)]; booking.status = "Seated";
+            showToast(`Seated at Table ${tableId}`);
+            closeModal(); refreshUI();
+        }
+
+        function moveGuest() {
+            const newTableId = document.getElementById('move-table-select').value;
+            if (!newTableId) { showToast("Select a new table first."); return; }
+            const booking = bookings.find(b => b.id === currentActiveBookingId);
+            booking.tableIds = [parseInt(newTableId)]; 
+            showToast(`${booking.name} moved to Table ${newTableId}`);
+            closeModal(); refreshUI();
+        }
+
+        function renderLinkedTablesList(booking) {
+            const container = document.getElementById('linked-tables-list');
+            container.innerHTML = '';
+            booking.tableIds.forEach(id => {
+                container.innerHTML += `<div class="linked-table-item"><span>Table ${id}</span>${booking.tableIds.length > 1 ? `<button class="btn-unlink" onclick="unlinkTable(${id})">Unlink</button>` : ''}</div>`;
+            });
+        }
+
+        function linkNewTable() {
+            const tableId = document.getElementById('link-table-select').value;
+            if (!tableId) return;
+            const booking = bookings.find(b => b.id === currentActiveBookingId);
+            booking.tableIds.push(parseInt(tableId));
+            showToast(`Table ${tableId} linked.`);
+            renderLinkedTablesList(booking); populateAllTables('link-table-select', booking.tableIds); refreshUI();
+        }
+
+        function unlinkTable(tableId) {
+            const booking = bookings.find(b => b.id === currentActiveBookingId);
+            booking.tableIds = booking.tableIds.filter(id => id !== tableId);
+            renderLinkedTablesList(booking); populateAllTables('link-table-select', booking.tableIds); refreshUI();
+        }
+
+        function updateStatus() {
+            const newStatus = document.getElementById('status-select').value;
+            const booking = bookings.find(b => b.id === currentActiveBookingId);
+            if (newStatus === "Table Cleared") {
+                booking.status = "Cleared"; booking.tableIds = []; showToast(`Party cleared. Tables are free.`); closeModal();
+            } else {
+                booking.status = newStatus; showToast(`Status updated: ${newStatus}`);
+            }
+            refreshUI();
+        }
+
+        function restoreGuest() {
+            const booking = bookings.find(b => b.id === currentActiveBookingId);
+            booking.status = "Waiting"; closeModal(); switchTab('active'); refreshUI();
+        }
+
+        function removeBooking() {
+            if (confirm("Permanently delete booking?")) {
+                bookings = bookings.filter(b => b.id !== currentActiveBookingId); closeModal(); refreshUI();
+            }
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById("toast"); t.innerText = msg; t.classList.add("show");
+            setTimeout(() => t.classList.remove("show"), 2500);
+        }
+
+        init();
+    </script>
+</body>
+</html>
